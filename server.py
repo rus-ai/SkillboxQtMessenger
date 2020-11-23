@@ -84,6 +84,9 @@ def get_messages():
             if len(filtered_db) >= 100:
                 break
 
+    # Добавляем задержку для для эмуляции медленного интернета и подвисания клиента
+    time.sleep(2)
+
     return {'messages': filtered_db}
 
 

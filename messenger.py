@@ -1,7 +1,8 @@
 from datetime import datetime
 
+import json
 import requests
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtNetwork
 
 import clientui
 
@@ -15,29 +16,36 @@ class MessengerWindow(QtWidgets.QMainWindow, clientui.Ui_Messenger):
 
         self.sendButton.pressed.connect(self.send_message)
 
+        self.network = QtNetwork.QNetworkAccessManager()
+        self.network.finished.connect(self.update_messages_request_ready)
+
+        self.isNotRequested = True;
+
         self.after = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_messages)
         self.timer.start(1000)
 
     def update_messages(self):
-        try:
-            response = requests.get(
-                self.url + 'messages',
-                params={'after': self.after}
-            )
-        except:
-            return
+        if self.isNotRequested:
+            self.isNotRequested = False
+            request = QtNetwork.QNetworkRequest(QtCore.QUrl(self.url + 'messages?after=' + str(self.after)))
+            self.network.get(request)
+        return
 
-        for message in response.json()['messages']:
+    def update_messages_request_ready(self, reply):
+        js = json.loads(str(reply.readAll(), 'utf-8'))
+        for message in js['messages']:
             dt = datetime.fromtimestamp(message['time'])
             dt = dt.strftime('%H:%M:%S')
 
             self.messagesBrowser.append(dt + ' ' + message['name'])
             self.messagesBrowser.append(message['text'])
             self.messagesBrowser.append('')
+            self.repaint()
 
             self.after = message['time']
+        self.isNotRequested = True
 
     def send_message(self):
         name = self.nameInput.text()
