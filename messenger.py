@@ -2,10 +2,14 @@ from datetime import datetime
 
 import json
 import requests
-from PyQt5 import QtWidgets, QtCore, QtNetwork
+from PyQt5 import QtWidgets, QtCore, QtNetwork, QtMultimedia
 
 import clientui
 
+media_player = QtMultimedia.QMediaPlayer()
+icq_url = QtCore.QUrl.fromLocalFile("icq-message.wav")
+content = QtMultimedia.QMediaContent(icq_url)
+media_player.setMedia(content)
 
 class MessengerWindow(QtWidgets.QMainWindow, clientui.Ui_Messenger):
     def __init__(self, url):
@@ -50,6 +54,7 @@ class MessengerWindow(QtWidgets.QMainWindow, clientui.Ui_Messenger):
     def send_message(self):
         name = self.nameInput.text()
         text = self.textInput.toPlainText()
+        media_player.play()
         try:
             response = requests.post(
                 self.url + 'send',
